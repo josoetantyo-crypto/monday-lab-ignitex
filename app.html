@@ -411,7 +411,7 @@ function render(){
   if(curMonth!=='ALL'){const t=f.find(s=>s.status!=='Holiday');if(t){banner.style.display='flex';document.getElementById('themeEmoji').textContent=EMOJIS[t.tema]||'📚';document.getElementById('themeText').textContent=t.tema;}}
   else banner.style.display='none';
   const grid=document.getElementById('grid'),empty=document.getElementById('emptyState');
-  if(!f.length){grid.innerHTML='';empty.style.display='block';return;}
+  if(!f.length){grid.innerHTML='';empty.style.display='none';return;}
   empty.style.display='none';
   grid.innerHTML=curMonth==='ALL'?renderGrouped(f):`<div class="grid">${f.map(cardHtml).join('')}</div>`;
 }
@@ -465,10 +465,10 @@ function renderModal(){
     <span class="badge ${s.status.toLowerCase()}" style="padding:4px 12px">${s.status}</span>
     ${!isH?`<span class="meta-tag">🎤 ${s.speaker}</span><span class="meta-tag">🎙 ${s.mc}</span><span class="meta-tag">⏱ ${s.durasi}</span><span class="meta-tag">🎲 ${s.ice}</span>`:''}`;
   document.getElementById('btnDone').style.display=(isAdmin&&s.status==='Planned')?'inline-flex':'none';
-  document.getElementById('btnEdit').style.display=(isAdmin&&!isH)?'inline-flex':'none';
+  document.getElementById('btnEdit').style.display=isAdmin?'inline-flex':'none';
   document.getElementById('btnSave').style.display=(isAdmin&&editing)?'inline-flex':'none';
   document.getElementById('btnEdit').textContent=editing?'↩ Batal':'✏ Edit';
-  if(isH){document.getElementById('mBody').innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:40px;margin-bottom:12px">🎉</div><p>${s.catatan}</p></div>`;return;}
+  if(isH&&!editing){document.getElementById('mBody').innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:40px;margin-bottom:12px">🎉</div><p>${s.topik}</p><p style="margin-top:8px;font-size:12px">${s.catatan}</p></div>`;return;}
   editing?renderEdit():renderView();
 }
 
@@ -484,48 +484,67 @@ function renderView(){
 }
 
 function renderEdit(){
-  const s=curSession;
+  const s=curSession,isH=s.status==='Holiday';
   document.getElementById('mBody').innerHTML=`
     <div class="edit-form">
-      <div class="form-group"><label class="form-label">Topik</label><input class="form-input" id="eTopik" value="${esc(s.topik)}"></div>
       <div class="form-row">
-        <div class="form-group"><label class="form-label">Speaker</label><input class="form-input" id="eSpeaker" value="${esc(s.speaker)}"></div>
-        <div class="form-group"><label class="form-label">MC</label><input class="form-input" id="eMc" value="${esc(s.mc)}"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-input" id="eStatus" onchange="onStatusChange(this.value)">
+            <option value="Planned"${s.status==='Planned'?' selected':''}>Planned</option>
+            <option value="Done"${s.status==='Done'?' selected':''}>Done</option>
+            <option value="Holiday"${s.status==='Holiday'?' selected':''}>🎉 Holiday / Libur</option>
+          </select>
+        </div>
+        <div class="form-group" id="gNamaLibur" style="display:${isH?'flex':'none'}"><label class="form-label">Nama Libur</label>
+          <input class="form-input" id="eNamaLibur" value="${esc(isH?s.topik:'')}" placeholder="Contoh: Libur Idhul Adha">
+        </div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Durasi</label><input class="form-input" id="eDurasi" value="${esc(s.durasi)}"></div>
-        <div class="form-group"><label class="form-label">Ice Breaker</label><input class="form-input" id="eIce" value="${esc(s.ice)}"></div>
+      <div id="normalFields" style="display:${isH?'none':'contents'}">
+        <div class="form-group"><label class="form-label">Topik</label><input class="form-input" id="eTopik" value="${esc(s.topik)}"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Speaker</label><input class="form-input" id="eSpeaker" value="${esc(s.speaker)}"></div>
+          <div class="form-group"><label class="form-label">MC</label><input class="form-input" id="eMc" value="${esc(s.mc)}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Durasi</label><input class="form-input" id="eDurasi" value="${esc(s.durasi)}"></div>
+          <div class="form-group"><label class="form-label">Ice Breaker</label><input class="form-input" id="eIce" value="${esc(s.ice||'')}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Materi</label><span class="form-hint">Satu poin per baris</span>
+          <textarea class="form-textarea" id="eMateri" rows="7">${esc((s.materi||[]).join('\n'))}</textarea>
+        </div>
+        <div class="form-group"><label class="form-label">FGD Questions</label><span class="form-hint">Satu per baris</span>
+          <textarea class="form-textarea" id="eFgd" rows="4">${esc((s.fgd||[]).join('\n'))}</textarea>
+        </div>
+        <div class="form-group"><label class="form-label">Catatan</label><input class="form-input" id="eCatatan" value="${esc(s.catatan||'')}"></div>
       </div>
-      <div class="form-group"><label class="form-label">Status</label>
-        <select class="form-input" id="eStatus">
-          <option value="Planned"${s.status==='Planned'?' selected':''}>Planned</option>
-          <option value="Done"${s.status==='Done'?' selected':''}>Done</option>
-          <option value="Holiday"${s.status==='Holiday'?' selected':''}>Holiday</option>
-        </select>
-      </div>
-      <div class="form-group"><label class="form-label">Materi</label><span class="form-hint">Satu poin per baris</span>
-        <textarea class="form-textarea" id="eMateri" rows="7">${esc((s.materi||[]).join('\n'))}</textarea>
-      </div>
-      <div class="form-group"><label class="form-label">FGD Questions</label><span class="form-hint">Satu per baris</span>
-        <textarea class="form-textarea" id="eFgd" rows="4">${esc((s.fgd||[]).join('\n'))}</textarea>
-      </div>
-      <div class="form-group"><label class="form-label">Catatan</label><input class="form-input" id="eCatatan" value="${esc(s.catatan||'')}"></div>
     </div>`;
+}
+
+function onStatusChange(v){
+  const isH=v==='Holiday';
+  document.getElementById('gNamaLibur').style.display=isH?'flex':'none';
+  document.getElementById('normalFields').style.display=isH?'none':'contents';
 }
 
 async function saveEdit(){
   const s=curSession;
-  const updated={...s,
-    topik:document.getElementById('eTopik').value.trim(),
-    speaker:document.getElementById('eSpeaker').value.trim(),
-    mc:document.getElementById('eMc').value.trim(),
-    durasi:document.getElementById('eDurasi').value.trim(),
-    ice:document.getElementById('eIce').value.trim(),
-    status:document.getElementById('eStatus').value,
-    materi:document.getElementById('eMateri').value.split('\n').map(l=>l.trim()).filter(Boolean),
-    fgd:document.getElementById('eFgd').value.split('\n').map(l=>l.trim()).filter(Boolean),
-    catatan:document.getElementById('eCatatan').value.trim(),
-  };
+  const status=document.getElementById('eStatus').value;
+  const updated = status==='Holiday'
+    ? {...s, status:'Holiday',
+        topik: document.getElementById('eNamaLibur').value.trim()||'Libur',
+        catatan:'', speaker:'—', mc:'—', durasi:'—', ice:'—', materi:[], fgd:[]
+      }
+    : {...s,
+        topik:document.getElementById('eTopik').value.trim(),
+        speaker:document.getElementById('eSpeaker').value.trim(),
+        mc:document.getElementById('eMc').value.trim(),
+        durasi:document.getElementById('eDurasi').value.trim(),
+        ice:document.getElementById('eIce').value.trim(),
+        status,
+        materi:document.getElementById('eMateri').value.split('\n').map(l=>l.trim()).filter(Boolean),
+        fgd:document.getElementById('eFgd').value.split('\n').map(l=>l.trim()).filter(Boolean),
+        catatan:document.getElementById('eCatatan').value.trim(),
+      };
   document.getElementById('btnSave').textContent='⏳ Menyimpan…';
   try {
     await writeSession('upsert',{session:updated});
