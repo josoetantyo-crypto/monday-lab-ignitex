@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE MONDAY LAB • IgniteX Dashboard 2026</title>
+<style>
+:root {
+  --bg:#080b14;--surface:#0f1626;--card:#131d30;--card-hover:#1a2640;
+  --border:#1e2d47;--accent:#f97316;--accent2:#3b82f6;
+  --done:#22c55e;--planned:#3b82f6;--holiday:#6b7280;
+  --text:#f1f5f9;--text-muted:#64748b;--text-dim:#94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:linear-gradient(135deg,#0f1626 0%,#1a0a2e 100%);border-bottom:1px solid var(--border);padding:0 24px;position:sticky;top:0;z-index:100}
+.header-top{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:16px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-img-wrap{background:white;border-radius:8px;padding:4px 10px;display:flex;align-items:center}
+.logo-img{height:32px;display:block}
+.logo-title{font-size:16px;font-weight:700}
+.logo-sub{font-size:11px;color:var(--text-muted)}
+.header-stats{display:flex;gap:24px}
+.stat{text-align:center}
+.stat-num{font-size:22px;font-weight:800}
+.stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.stat-num.done{color:var(--done)}.stat-num.planned{color:var(--accent2)}
+.header-actions{display:flex;gap:8px;align-items:center}
+.search-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:13px;width:220px;outline:none;transition:border-color .2s}
+.search-box:focus{border-color:var(--accent2)}
+.search-box::placeholder{color:var(--text-muted)}
+.btn{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;transition:all .2s;white-space:nowrap}
+.btn:hover{background:var(--card-hover);color:var(--text);border-color:var(--accent2)}
+.btn-primary{background:linear-gradient(135deg,#f97316,#ef4444);border-color:transparent;color:white;font-weight:600}
+.btn-primary:hover{opacity:.9;color:white;border-color:transparent}
+.btn-green{background:rgba(34,197,94,.15);border-color:var(--done);color:var(--done);font-weight:600}
+.btn-green:hover{background:rgba(34,197,94,.25)}
+.admin-badge{font-size:11px;color:var(--done);border:1px solid rgba(34,197,94,.3);background:rgba(34,197,94,.1);padding:4px 10px;border-radius:100px}
+.month-tabs{display:flex;gap:4px;padding:10px 0;overflow-x:auto;scrollbar-width:none}
+.month-tabs::-webkit-scrollbar{display:none}
+.month-tab{padding:6px 14px;border-radius:6px;border:1px solid transparent;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap;transition:all .2s;background:none;letter-spacing:.5px}
+.month-tab:hover{color:var(--text);background:var(--surface)}
+.month-tab.active{background:var(--accent2);color:white}
+.progress-bar{height:3px;background:var(--border);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--done),#4ade80);transition:width .6s ease}
+.filter-bar{padding:10px 24px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.sf{padding:4px 14px;border-radius:100px;border:1px solid var(--border);background:none;color:var(--text-muted);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.sf:hover{color:var(--text)}
+.sf.a-all{background:var(--surface);color:var(--text);border-color:#374151}
+.sf.a-done{background:rgba(34,197,94,.15);color:var(--done);border-color:var(--done)}
+.sf.a-planned{background:rgba(59,130,246,.15);color:var(--planned);border-color:var(--planned)}
+.sf.a-holiday{background:rgba(107,114,128,.15);color:var(--holiday);border-color:var(--holiday)}
+main{padding:24px;max-width:1400px;margin:0 auto}
+.theme-banner{background:linear-gradient(135deg,#0f1626,#1a0a2e);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px}
+.theme-emoji{font-size:28px}
+.theme-info h3{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.theme-info h2{font-size:17px;font-weight:700;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border)}
+.card.done::before{background:var(--done)}.card.planned::before{background:var(--planned)}.card.holiday::before{background:var(--holiday)}
+.card:hover{background:var(--card-hover);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.card-date-grp{display:flex;align-items:center;gap:8px}
+.card-num{font-size:11px;color:var(--text-muted);font-weight:600}
+.card-date{font-size:12px;color:var(--text-dim)}
+.badge{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.badge.done{background:rgba(34,197,94,.15);color:var(--done)}
+.badge.planned{background:rgba(59,130,246,.15);color:var(--planned)}
+.badge.holiday{background:rgba(107,114,128,.15);color:var(--holiday)}
+.card-topic{font-size:14px;font-weight:600;line-height:1.4;margin-bottom:10px}
+.card-topic.hol{color:var(--text-muted);font-style:italic}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{background:var(--surface);border:1px solid var(--border);padding:3px 10px;border-radius:6px;font-size:11px;color:var(--text-dim)}
+.card-preview{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px;border-top:1px solid var(--border)}
+.ice-chip{font-size:11px;color:var(--text-muted)}
+.view-more{font-size:11px;color:var(--accent2)}
+.month-section{margin-bottom:32px}
+.ms-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px}
+.ms-emoji{font-size:24px}
+.ms-name{font-size:15px;font-weight:700}
+.ms-tema{font-size:12px;color:var(--accent);font-weight:500}
+.ms-badges{display:flex;gap:8px;margin-left:auto}
+.ms-done-ct{font-size:11px;padding:3px 10px;background:rgba(34,197,94,.15);color:var(--done);border-radius:100px}
+.ms-count{font-size:11px;padding:3px 10px;background:var(--card);color:var(--text-muted);border-radius:100px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;width:min(720px,100%);max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-hdr{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-shrink:0}
+.modal-tema{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.modal-topik{font-size:18px;font-weight:700;margin-bottom:10px;line-height:1.3}
+.modal-meta{display:flex;flex-wrap:wrap;gap:6px}
+.modal-acts{display:flex;gap:8px;align-items:flex-start;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.modal-body{overflow-y:auto;padding:20px 24px;flex:1}
+.rundown{display:flex;flex-direction:column;gap:4px}
+.rundown-row{display:grid;grid-template-columns:120px 120px 1fr;gap:12px;padding:8px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-size:12px;align-items:center}
+.rundown-time{color:var(--accent2);font-weight:600;font-size:11px}
+.rundown-seg{color:var(--text);font-weight:500}
+.rundown-note{color:var(--text-muted)}
+.sec-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;margin-bottom:10px;margin-top:4px}
+.meta-tag{background:var(--surface);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;color:var(--text-dim)}
+.materi-list{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.materi-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;color:var(--text-dim);padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.m-num{background:var(--accent2);color:white;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.fgd-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.fgd-item{font-size:13px;color:var(--text-dim);padding:10px 14px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:8px;line-height:1.5}
+.catatan-box{font-size:13px;color:var(--text-dim);padding:10px 14px;background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.2);border-radius:8px;line-height:1.5;margin-bottom:20px}
+.edit-form{display:flex;flex-direction:column;gap:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.form-hint{font-size:11px;color:var(--text-muted)}
+.form-input{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;width:100%}
+.form-input:focus{border-color:var(--accent2)}
+.form-textarea{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;width:100%;resize:vertical;font-family:inherit;line-height:1.5}
+.form-textarea:focus{border-color:var(--accent2)}
+select.form-input{cursor:pointer}
+.empty-state,.loading-state{text-align:center;padding:80px 20px;color:var(--text-muted)}
+.empty-state div,.loading-state div{font-size:48px;margin-bottom:16px}
+.empty-state p,.loading-state p{font-size:14px;line-height:1.6}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1e2d47;border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:8px;font-size:13px;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:768px){
+  .header-stats{gap:16px}.stat-num{font-size:18px}
+  .form-row{grid-template-columns:1fr}.rundown-row{grid-template-columns:1fr;gap:2px}
+  .search-box{width:140px}.modal-acts{justify-content:flex-start}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <div class="logo">
+      <div class="logo-img-wrap"><img src="ignitex-logo.png" class="logo-img" alt="IgniteX" onerror="this.style.display='none'"></div>
+      <div><div class="logo-title">THE MONDAY LAB</div><div class="logo-sub">IgniteX Dashboard 2026</div></div>
+    </div>
+    <div class="header-stats" id="statsBar">
+      <div class="stat"><div class="stat-num" style="color:var(--text-muted)">—</div><div class="stat-label">Loading</div></div>
+    </div>
+    <div class="header-actions">
+      <input type="text" class="search-box" placeholder="Cari topik, speaker, MC…" oninput="setSearch(this.value)">
+      <span class="admin-badge" id="adminBadge" style="display:none">● Admin</span>
+      <button class="btn" id="btnLogin" onclick="openLoginModal()">🔐 Admin</button>
+      <button class="btn btn-primary" id="btnLogout" style="display:none" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+  <div class="month-tabs" id="monthTabs"></div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</header>
+
+<div class="filter-bar">
+  <span class="filter-label">Filter:</span>
+  <button class="sf a-all" onclick="setSF('all',this)">Semua</button>
+  <button class="sf" onclick="setSF('done',this)">✓ Done</button>
+  <button class="sf" onclick="setSF('planned',this)">○ Planned</button>
+  <button class="sf" onclick="setSF('holiday',this)">🎉 Holiday</button>
+  <span id="countLabel" style="margin-left:auto;font-size:11px;color:var(--text-muted)"></span>
+</div>
+
+<main>
+  <div class="theme-banner" id="themeBanner" style="display:none">
+    <span class="theme-emoji" id="themeEmoji"></span>
+    <div class="theme-info"><h3>Tema Bulan Ini</h3><h2 id="themeText"></h2></div>
+  </div>
+  <div id="grid"></div>
+  <div id="emptyState" class="empty-state" style="display:none">
+    <div>📭</div>
+    <p>Database kosong.<br>Login sebagai admin lalu klik <strong>Import Data</strong> untuk migrasi dari dashboard lama.</p>
+  </div>
+  <div id="loadingState" class="loading-state"><div>⏳</div><p>Memuat data…</p></div>
+</main>
+
+<!-- Session Modal -->
+<div id="overlay" class="overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div style="flex:1;min-width:0">
+        <div class="modal-tema" id="mThema"></div>
+        <div class="modal-topik" id="mTopik"></div>
+        <div class="modal-meta" id="mMeta"></div>
+      </div>
+      <div class="modal-acts">
+        <button class="btn btn-green" id="btnDone" onclick="markDoneModal()" style="display:none">✓ Tandai Done</button>
+        <button class="btn" id="btnEdit" onclick="toggleEdit()" style="display:none">✏ Edit</button>
+        <button class="btn btn-primary" id="btnSave" onclick="saveEdit()" style="display:none">💾 Simpan</button>
+        <button class="btn" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginOverlay" class="overlay" onclick="handleLoginOverlayClick(event)">
+  <div class="modal" style="width:min(420px,100%);max-height:fit-content">
+    <div class="modal-hdr">
+      <div><div class="modal-topik" style="font-size:16px">🔐 Admin Login</div></div>
+      <button class="btn" onclick="closeLoginModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:24px">
+      <div class="form-group">
+        <label class="form-label">Password Admin</label>
+        <input class="form-input" id="loginPass" type="password" placeholder="••••••••"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary" id="btnLoginSubmit" style="width:100%;margin-top:20px;padding:11px" onclick="doLogin()">
+        Login
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div id="importOverlay" class="overlay" onclick="if(event.target===this)closeImport()">
+  <div class="modal" style="width:min(560px,100%);max-height:fit-content">
+    <div class="modal-hdr">
+      <div><div class="modal-topik" style="font-size:16px">📦 Import Data Lama</div></div>
+      <button class="btn" onclick="closeImport()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:24px">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+        1. Buka <strong>dashboard.html</strong> lama di browser<br>
+        2. F12 → Console → ketik: <code style="background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--accent2)">copy(JSON.stringify(sessions))</code><br>
+        3. Paste di bawah → klik Import
+      </p>
+      <div class="form-group">
+        <label class="form-label">Data JSON</label>
+        <textarea class="form-textarea" id="importData" rows="6" placeholder='[{"id":1,"bulan":"JAN",...}]'></textarea>
+      </div>
+      <button class="btn btn-primary" id="btnImport" style="width:100%;margin-top:16px;padding:11px" onclick="doImport()">
+        🚀 Import ke Database
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════ CONFIG ═══════════════════
+const DATA_URL = '/api/read';
+const API_URL  = '/api/write';
+// ══════════════════════════════════════════════
+
+const MONTHS = ['ALL','JAN','FEB','MAR','APR','MEI','JUN','JUL','AGT','SEP','OKT','NOV','DES'];
+const EMOJIS = {
+  'FOUNDATION & RESET':'🏗️','BUILT ON STANDARDS (WORK ETHICS)':'⚙️',
+  'THE HUMAN OPERATING SYSTEM':'🧠','MULTIPLIER EFFECT':'🚀',
+  'THE MONEY OPERATING SYSTEM':'💰','BECOMING YOUR NEXT SELF':'🦋',
+  'THE SALES OPERATING SYSTEM':'🎯','THE INSURANCE PROFESSIONAL':'🛡️',
+  'SYSTEMS & PERFORMANCE':'📊','ADVANCED INFLUENCE & PRESENCE':'✨',
+  'THE WINNING MINDSET':'🏆','YEAR IN REVIEW & LEVEL UP':'🎊'
+};
+
+let sessions=[], curMonth='ALL', curSF='all', curQ='';
+let curSession=null, editing=false;
+let adminToken = sessionStorage.getItem('adminToken') || '';
+let isAdmin = false;
+
+window.addEventListener('DOMContentLoaded', () => {
+  buildTabs();
+  if (adminToken) { isAdmin=true; updateAuthUI(true); }
+  loadData();
+});
+
+// ─── DATA ───
+async function loadData() {
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('grid').innerHTML = '';
+  document.getElementById('emptyState').style.display = 'none';
+  try {
+    // Cache-bust every 30s
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    sessions = await res.json();
+  } catch(e) {
+    toast('⚠ Gagal load data: ' + e.message);
+    sessions = [];
+  }
+  document.getElementById('loadingState').style.display = 'none';
+  if (!sessions.length) {
+    const empty = document.getElementById('emptyState');
+    empty.style.display = 'block';
+    if (isAdmin) {
+      empty.innerHTML = `<div>📭</div><p>Database kosong.</p>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="openImport()">📦 Import Data Lama</button>`;
+    }
+    return;
+  }
+  render();
+}
+
+async function writeSession(action, payload) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'X-Admin-Token': adminToken },
+    body: JSON.stringify({ action, ...payload })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Write failed');
+  return data;
+}
+
+// ─── AUTH ───
+function updateAuthUI(in_) {
+  document.getElementById('btnLogin').style.display    = in_ ? 'none'  : 'inline-flex';
+  document.getElementById('btnLogout').style.display   = in_ ? 'inline-flex' : 'none';
+  document.getElementById('adminBadge').style.display  = in_ ? 'inline-flex' : 'none';
+}
+
+async function doLogin() {
+  const pass = document.getElementById('loginPass').value;
+  const btn  = document.getElementById('btnLoginSubmit');
+  if (!pass) { toast('⚠ Masukkan password'); return; }
+  btn.disabled = true; btn.textContent = 'Checking…';
+
+  // Verify by trying a no-op write
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'X-Admin-Token': pass },
+      body: JSON.stringify({ action: 'seed', sessions: [] })
+    });
+    if (res.status === 401) throw new Error('Password salah');
+    adminToken = pass;
+    isAdmin = true;
+    sessionStorage.setItem('adminToken', pass);
+    updateAuthUI(true);
+    closeLoginModal();
+    toast('✓ Login berhasil — mode Admin aktif');
+    if (!sessions.length) loadData();
+    else render();
+  } catch(e) {
+    toast('⚠ ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = 'Login';
+}
+
+function doLogout() {
+  adminToken = ''; isAdmin = false;
+  sessionStorage.removeItem('adminToken');
+  updateAuthUI(false);
+  if (editing) { editing=false; closeModal(); }
+  render();
+  toast('✓ Logged out');
+}
+
+function openLoginModal()  { document.getElementById('loginOverlay').classList.add('open'); setTimeout(()=>document.getElementById('loginPass').focus(),100); }
+function closeLoginModal() { document.getElementById('loginOverlay').classList.remove('open'); }
+function handleLoginOverlayClick(e) { if(e.target===document.getElementById('loginOverlay')) closeLoginModal(); }
+
+// ─── IMPORT ───
+function openImport()  { document.getElementById('importOverlay').classList.add('open'); }
+function closeImport() { document.getElementById('importOverlay').classList.remove('open'); }
+
+async function doImport() {
+  const raw = document.getElementById('importData').value.trim();
+  const btn = document.getElementById('btnImport');
+  if (!raw) { toast('⚠ Paste data dulu'); return; }
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { toast('⚠ JSON tidak valid'); return; }
+  if (!Array.isArray(data) || !data.length) { toast('⚠ Data harus array'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Importing…';
+  try {
+    const result = await writeSession('seed', { sessions: data });
+    toast(`✓ ${result.count} sesi berhasil diimport!`);
+    closeImport();
+    await loadData();
+  } catch(e) {
+    toast('⚠ ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = '🚀 Import ke Database';
+}
+
+// ─── FILTERS ───
+function buildTabs() {
+  document.getElementById('monthTabs').innerHTML = MONTHS.map(m =>
+    `<button class="month-tab${m==='ALL'?' active':''}" onclick="setMonth('${m}',this)">${m==='ALL'?'◉ Semua':m}</button>`
+  ).join('');
+}
+function setMonth(m,el){ curMonth=m; document.querySelectorAll('.month-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); render(); }
+function setSF(s,el){ curSF=s; document.querySelectorAll('.sf').forEach(t=>t.className='sf'); el.classList.add('sf','a-'+s); render(); }
+function setSearch(v){ curQ=v; render(); }
+function filtered(){
+  return sessions.filter(s=>{
+    const mOk=curMonth==='ALL'||s.bulan===curMonth;
+    const sOk=curSF==='all'||s.status.toLowerCase()===curSF;
+    const q=curQ.toLowerCase();
+    const qOk=!q||[s.topik,s.speaker,s.mc,s.tema].some(v=>v.toLowerCase().includes(q));
+    return mOk&&sOk&&qOk;
+  });
+}
+
+// ─── RENDER ───
+function render(){
+  const f=filtered();
+  const real=sessions.filter(s=>s.status!=='Holiday');
+  const done=sessions.filter(s=>s.status==='Done').length;
+  const pct=real.length?Math.round(done/real.length*100):0;
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat"><div class="stat-num">${real.length}</div><div class="stat-label">Total Sesi</div></div>
+    <div class="stat"><div class="stat-num done">${done}</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-num planned">${real.length-done}</div><div class="stat-label">Planned</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--accent)">${pct}%</div><div class="stat-label">Progress</div></div>`;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('countLabel').textContent=`${f.length} sesi`;
+  const banner=document.getElementById('themeBanner');
+  if(curMonth!=='ALL'){const t=f.find(s=>s.status!=='Holiday');if(t){banner.style.display='flex';document.getElementById('themeEmoji').textContent=EMOJIS[t.tema]||'📚';document.getElementById('themeText').textContent=t.tema;}}
+  else banner.style.display='none';
+  const grid=document.getElementById('grid'),empty=document.getElementById('emptyState');
+  if(!f.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML=curMonth==='ALL'?renderGrouped(f):`<div class="grid">${f.map(cardHtml).join('')}</div>`;
+}
+
+function renderGrouped(f){
+  const ORDER=['JAN','FEB','MAR','APR','MEI','JUN','JUL','AGT','SEP','OKT','NOV','DES'];
+  const groups={};
+  f.forEach(s=>{if(!groups[s.bulan])groups[s.bulan]=[];groups[s.bulan].push(s);});
+  return ORDER.filter(m=>groups[m]?.length).map(m=>{
+    const tema=groups[m].find(s=>s.status!=='Holiday')?.tema||'';
+    const nonHol=groups[m].filter(s=>s.status!=='Holiday').length;
+    const doneC=groups[m].filter(s=>s.status==='Done').length;
+    return `<div class="month-section">
+      <div class="ms-header">
+        <span class="ms-emoji">${EMOJIS[tema]||'📅'}</span>
+        <div><div class="ms-name">${m} 2026</div><div class="ms-tema">${tema}</div></div>
+        <div class="ms-badges"><span class="ms-done-ct">✓ ${doneC} Done</span><span class="ms-count">${nonHol} Sesi</span></div>
+      </div>
+      <div class="grid">${groups[m].map(cardHtml).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function cardHtml(s){
+  const sc=s.status.toLowerCase(),isH=s.status==='Holiday';
+  return `<div class="card ${sc}" onclick="openModal(${s.id})">
+    <div class="card-top">
+      <div class="card-date-grp"><span class="card-num">#${s.id}</span><span class="card-date">${s.tanggal}</span></div>
+      <span class="badge ${sc}">${s.status}</span>
+    </div>
+    <div class="card-topic${isH?' hol':''}">${s.topik}</div>
+    ${!isH?`
+      <div class="chips"><span class="chip">🎤 ${s.speaker}</span><span class="chip">🎙 ${s.mc}</span></div>
+      ${s.materi&&s.materi[0]?`<div class="card-preview">• ${s.materi[0]}</div>`:''}
+      <div class="card-foot"><span class="ice-chip">🎲 ${s.ice}</span><span class="view-more">Lihat Detail →</span></div>
+    `:`<div class="card-foot"><span style="color:var(--holiday);font-size:12px">${s.catatan}</span></div>`}
+  </div>`;
+}
+
+// ─── MODAL ───
+function openModal(id){curSession=sessions.find(s=>s.id===id);editing=false;renderModal();document.getElementById('overlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(){document.getElementById('overlay').classList.remove('open');document.body.style.overflow='';curSession=null;editing=false;}
+function handleOverlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
+
+function renderModal(){
+  const s=curSession,isH=s.status==='Holiday',em=EMOJIS[s.tema]||'📚';
+  document.getElementById('mThema').textContent=`${em} ${s.tema} · Sesi #${s.id}`;
+  document.getElementById('mTopik').textContent=s.topik;
+  document.getElementById('mMeta').innerHTML=`
+    <span class="meta-tag">📅 ${s.tanggal}</span>
+    <span class="badge ${s.status.toLowerCase()}" style="padding:4px 12px">${s.status}</span>
+    ${!isH?`<span class="meta-tag">🎤 ${s.speaker}</span><span class="meta-tag">🎙 ${s.mc}</span><span class="meta-tag">⏱ ${s.durasi}</span><span class="meta-tag">🎲 ${s.ice}</span>`:''}`;
+  document.getElementById('btnDone').style.display=(isAdmin&&s.status==='Planned')?'inline-flex':'none';
+  document.getElementById('btnEdit').style.display=(isAdmin&&!isH)?'inline-flex':'none';
+  document.getElementById('btnSave').style.display=(isAdmin&&editing)?'inline-flex':'none';
+  document.getElementById('btnEdit').textContent=editing?'↩ Batal':'✏ Edit';
+  if(isH){document.getElementById('mBody').innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:40px;margin-bottom:12px">🎉</div><p>${s.catatan}</p></div>`;return;}
+  editing?renderEdit():renderView();
+}
+
+function renderView(){
+  const s=curSession;
+  const RD=[['19:00–19:10','Opening','MC buka acara, doa, briefing malam ini'],['19:10–19:25','Ice Breaking',s.ice||'—'],['19:25–20:25','Materi Utama',`${s.speaker} — ${s.durasi}`],['20:25–20:45','Q&A & FGD','Diskusi pertanyaan dan peer sharing'],['20:45–20:55','Action Item','Setiap peserta tulis 1 komitmen konkret'],['20:55–21:05','Closing','MC tutup, pengumuman, kalimat penutup'],['21:05+','Networking','Optional — connect, follow-up, ngobrol']];
+  document.getElementById('mBody').innerHTML=`
+    <div class="sec-lbl">Rundown Malam Ini</div>
+    <div class="rundown" style="margin-bottom:20px">${RD.map(r=>`<div class="rundown-row"><span class="rundown-time">${r[0]}</span><span class="rundown-seg">${r[1]}</span><span class="rundown-note">${r[2]}</span></div>`).join('')}</div>
+    ${s.materi?.length?`<div class="sec-lbl">Materi — ${s.materi.length} Poin</div><ul class="materi-list">${s.materi.map((m,i)=>`<li class="materi-item"><span class="m-num">${i+1}</span><span>${m}</span></li>`).join('')}</ul>`:''}
+    ${s.fgd?.length?`<div class="sec-lbl">FGD Questions</div><div class="fgd-list">${s.fgd.map(q=>`<div class="fgd-item">💬 ${q}</div>`).join('')}</div>`:''}
+    ${s.catatan?`<div class="sec-lbl">Catatan</div><div class="catatan-box">📝 ${s.catatan}</div>`:''}`;
+}
+
+function renderEdit(){
+  const s=curSession;
+  document.getElementById('mBody').innerHTML=`
+    <div class="edit-form">
+      <div class="form-group"><label class="form-label">Topik</label><input class="form-input" id="eTopik" value="${esc(s.topik)}"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Speaker</label><input class="form-input" id="eSpeaker" value="${esc(s.speaker)}"></div>
+        <div class="form-group"><label class="form-label">MC</label><input class="form-input" id="eMc" value="${esc(s.mc)}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Durasi</label><input class="form-input" id="eDurasi" value="${esc(s.durasi)}"></div>
+        <div class="form-group"><label class="form-label">Ice Breaker</label><input class="form-input" id="eIce" value="${esc(s.ice)}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-input" id="eStatus">
+          <option value="Planned"${s.status==='Planned'?' selected':''}>Planned</option>
+          <option value="Done"${s.status==='Done'?' selected':''}>Done</option>
+          <option value="Holiday"${s.status==='Holiday'?' selected':''}>Holiday</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Materi</label><span class="form-hint">Satu poin per baris</span>
+        <textarea class="form-textarea" id="eMateri" rows="7">${esc((s.materi||[]).join('\n'))}</textarea>
+      </div>
+      <div class="form-group"><label class="form-label">FGD Questions</label><span class="form-hint">Satu per baris</span>
+        <textarea class="form-textarea" id="eFgd" rows="4">${esc((s.fgd||[]).join('\n'))}</textarea>
+      </div>
+      <div class="form-group"><label class="form-label">Catatan</label><input class="form-input" id="eCatatan" value="${esc(s.catatan||'')}"></div>
+    </div>`;
+}
+
+async function saveEdit(){
+  const s=curSession;
+  const updated={...s,
+    topik:document.getElementById('eTopik').value.trim(),
+    speaker:document.getElementById('eSpeaker').value.trim(),
+    mc:document.getElementById('eMc').value.trim(),
+    durasi:document.getElementById('eDurasi').value.trim(),
+    ice:document.getElementById('eIce').value.trim(),
+    status:document.getElementById('eStatus').value,
+    materi:document.getElementById('eMateri').value.split('\n').map(l=>l.trim()).filter(Boolean),
+    fgd:document.getElementById('eFgd').value.split('\n').map(l=>l.trim()).filter(Boolean),
+    catatan:document.getElementById('eCatatan').value.trim(),
+  };
+  document.getElementById('btnSave').textContent='⏳ Menyimpan…';
+  try {
+    await writeSession('upsert',{session:updated});
+    const idx=sessions.findIndex(x=>x.id===s.id);
+    if(idx>=0)sessions[idx]=updated;
+    curSession=updated; editing=false; renderModal(); render();
+    toast('✓ Tersimpan');
+  } catch(e){ toast('⚠ '+e.message); }
+  document.getElementById('btnSave').textContent='💾 Simpan';
+}
+
+async function markDoneModal(){
+  if(!isAdmin)return;
+  const s=curSession,updated={...s,status:'Done'};
+  try {
+    await writeSession('upsert',{session:updated});
+    const idx=sessions.findIndex(x=>x.id===s.id);
+    if(idx>=0)sessions[idx]=updated;
+    curSession=updated; renderModal(); render(); toast('✓ Sesi ditandai Done!');
+  } catch(e){ toast('⚠ '+e.message); }
+}
+
+function toggleEdit(){editing=!editing;renderModal();}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+let _tt;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
