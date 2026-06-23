@@ -289,7 +289,43 @@ async function loadData() {
     }
     return;
   }
+  await applyAutoDone();
   render();
+}
+
+// ─── AUTO-DONE: sesi yang tanggalnya sudah lewat otomatis jadi Done ───
+function parseTgl(t) {
+  // format DD-MM-YYYY
+  const p = String(t || '').split('-');
+  if (p.length !== 3) return null;
+  const d = new Date(+p[2], +p[1] - 1, +p[0]);
+  return isNaN(d) ? null : d;
+}
+
+let pendingAutoDone = [];   // id sesi yang sudah auto-done di layar tapi belum tersimpan ke DB
+
+async function applyAutoDone() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  sessions.forEach(s => {
+    if (s.status !== 'Planned') return;       // hanya yang masih Planned
+    const d = parseTgl(s.tanggal);
+    if (d && d < today) {                       // tanggal sudah lewat (sebelum hari ini)
+      s.status = 'Done';
+      if (!pendingAutoDone.includes(s.id)) pendingAutoDone.push(s.id);
+    }
+  });
+  // Persist ke DB hanya jika admin login (viewer tetap lihat versi auto-done di layar)
+  // Pakai bulk 'seed' agar semua sesi lewat tersimpan dalam SATU commit, bukan satu per sesi.
+  if (pendingAutoDone.length && isAdmin && adminToken) {
+    const batch = pendingAutoDone
+      .map(id => sessions.find(x => x.id === id))
+      .filter(Boolean);
+    try {
+      await writeSession('seed', { sessions: batch });
+      pendingAutoDone = [];
+    } catch (e) { /* coba lagi nanti saat reload/login berikutnya */ }
+  }
 }
 
 async function writeSession(action, payload) {
@@ -331,7 +367,7 @@ async function doLogin() {
     closeLoginModal();
     toast('✓ Login berhasil — mode Admin aktif');
     if (!sessions.length) loadData();
-    else render();
+    else { await applyAutoDone(); render(); }   // persist sesi lewat yang sudah auto-done
   } catch(e) {
     toast('⚠ ' + e.message);
   }
